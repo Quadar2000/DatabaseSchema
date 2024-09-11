@@ -1,10 +1,8 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
+import prisma from '@/lib/prisma';
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
 
 export const authOptions = {
   providers: [
@@ -33,6 +31,8 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
+    maxAge: 10 * 60,
+    updateAge: 8 * 60,
   },
   pages: {
     signIn: '/page',
@@ -40,15 +40,15 @@ export const authOptions = {
   callbacks: {
     async session({ session, token, user }) {
       session.user.id = user?.id || token?.sub;
+      session.user.role = token.role
       return session;
     },
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
+        token.role = user.role;
       }
       return token;
     },
   },
 };
-
-//export default NextAuth(authOptions);

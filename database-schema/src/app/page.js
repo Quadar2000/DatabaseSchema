@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useSession } from 'next-auth/react';
 import styles from "./page.module.css";
-import SignIn from "./frontend/SignIn/SignIn";
+import SignIn from "./components/SignIn/SignIn";
 
 export default function Home() {
 
@@ -12,15 +12,13 @@ export default function Home() {
     return <div>Loading...</div>;
   }
 
-  if (status ==="authenticated") {
+  if (status === 'authenticated') {
     return <div>Welcome, user!</div>;
   }
     
   return (
     <main className={styles.main}>
-      <div className={styles.code}>
-        <SignIn/>
-      </div>
+      <SignIn/>
     </main>
     );
   

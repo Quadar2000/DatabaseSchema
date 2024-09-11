@@ -1,5 +1,7 @@
+"use client";
+
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 const WithRole = (Component, role) => {
@@ -8,15 +10,13 @@ const WithRole = (Component, role) => {
     const router = useRouter();
 
     useEffect(() => {
-      if (status === 'loading') return; // Poczekaj na załadowanie sesji
+      if (status === 'loading') return; 
 
-      // Jeśli użytkownik nie jest zalogowany lub nie ma odpowiedniej roli, przekieruj
       if (!session || session.user.role !== role) {
-        router.push('/page'); // Ścieżka do strony bez dostępu
+        router.push('/'); 
       }
     }, [session, status]);
 
-    // Jeśli użytkownik ma odpowiednią rolę, renderuj stronę
     return session?.user.role === role ? <Component /> : null;
   };
 };

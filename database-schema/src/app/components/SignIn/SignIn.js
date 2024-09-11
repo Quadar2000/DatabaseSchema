@@ -1,31 +1,8 @@
 "use client";
 
-// import { getCsrfToken, signIn } from "next-auth/react";
-
-// export default function SignIn({ searchParams }) {
-//   //const csrfToken = await getCsrfToken();
-
-//   return (
-//     <div>
-//       <h1>Sign In</h1>
-//       <form method="post" action="/api/auth/callback/credentials">
-//         {/* <input name="csrfToken" type="hidden" defaultValue={csrfToken} /> */}
-//         <label htmlFor="email">Email</label>
-//         <input id="email" name="email" type="email" required />
-//         <br />
-//         <label htmlFor="password">Password</label>
-//         <input id="password" name="password" type="password" required />
-//         <br />
-//         <button type="submit">Sign in</button>
-//       </form>
-//     </div>
-//    // <button onClick = {() => signIn()}>Sign In</button>
-//   );
-
-// }
-
 import { getCsrfToken,signIn } from 'next-auth/react';
 import { useState } from 'react';
+import styles from './signInStyle.module.css'
 
 export default function SignIn() {
 
@@ -44,11 +21,12 @@ export default function SignIn() {
     });
 
     if (result.error) {
-      setError(result.error); // Obsłuż błędy
+      setError(result.error); 
     }
   };
 
   return (
+    <div className={styles.signInStyle}>
     <form onSubmit={handleSubmit}>
       <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
          <label>Email</label>
@@ -66,6 +44,8 @@ export default function SignIn() {
          <br />
          {error && <div>{error}</div>}
     </form>
+    </div>
+    
   );
 }
 
