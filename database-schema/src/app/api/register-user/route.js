@@ -2,12 +2,19 @@ import { hash } from 'bcryptjs';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "../auth/[...nextauth]/route";
 import prisma from '@/lib/prisma';
+import { getToken } from 'next-auth/jwt';
 
 export async function POST(req){
     try{
         const session = await getServerSession(authOptions);
 
-        if(!session || session.user.role !== 'admin') {
+        const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+        const role = session?.user?.role || token?.role;
+
+        console.log('role: ' + role + '\n');
+
+        if(!session || role !== 'admin') {
             return new Response(JSON.stringify({message: "user unauthorized"}), {
                 status: 401,
             });
@@ -20,9 +27,9 @@ export async function POST(req){
             throw new Error('Email is incorrect. Check if it match pattern required for emails (e.g. contains @ character');
         }
 
-        const usernamePattern = /^[a-zA-Z0-9]{3,15}$/;
+        const usernamePattern = /^[a-zA-Z0-9\s]{3,35}$/;
         if (!usernamePattern.test(name)) {
-            throw new Error('Username is incorrect. Check if its contains only alphanumeric characters or number of characters is in range 3-15');
+            throw new Error('Username is incorrect. Check if its contains only alphanumeric characters or number of characters is in range 3-35');
         }
 
         const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
@@ -32,11 +39,11 @@ export async function POST(req){
 
         const hashedPassword = await hash(password, 10);
 
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [
-                  { email: session.user.email },
-                  { name: session.user.name }
+                  { email: email },
+                  { name: name }
                 ]
               }
           });
@@ -54,7 +61,7 @@ export async function POST(req){
             },
           });
 
-        return new Response(JSON.stringify({message: "Usre created succesfully"}), {
+        return new Response(JSON.stringify({message: "User created successfully"}), {
            status: 200,
         });
 

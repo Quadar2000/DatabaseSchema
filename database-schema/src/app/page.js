@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useSession } from 'next-auth/react';
 import styles from "./page.module.css";
 import SignIn from "./components/SignIn/SignIn";
+import SchemaDiagram from "./components/SchemaDiagram/SchemaDiagram";
 
 export default function Home() {
 
@@ -13,7 +14,12 @@ export default function Home() {
   }
 
   if (status === 'authenticated') {
-    return <div>Welcome, user!</div>;
+    //return <div>Welcome, user!</div>;
+    return (
+      <main className={styles.main}>
+        <SchemaDiagram/>
+      </main>
+      );
   }
     
   return (

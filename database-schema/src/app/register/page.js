@@ -15,6 +15,7 @@ const Register = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [csrfToken, setCsrfToken] = useState('');
+  const [newPassword, setNewPassword] = useState("");
 
   const [formState, dispatch] = useReducer(formReducer, {
     name: '',
@@ -72,6 +73,7 @@ const Register = () => {
         <label>Username</label>
         <input
           type="text"
+          name="name"
           value={formState.name}
           onChange={handleChange}
           required
@@ -82,6 +84,7 @@ const Register = () => {
         <label>Email</label>
         <input
           type="email"
+          name="email"
           value={formState.email}
           onChange={handleChange}
           required
@@ -92,7 +95,8 @@ const Register = () => {
         <label>Password</label>
         <input
           type="password"
-          value={formState.email}
+          name="password"
+          value={formState.password}
           onChange={handleChange}
           required
         />
@@ -102,6 +106,7 @@ const Register = () => {
         <label>Confirm Password</label>
         <input
           type="password"
+          name="confirmPassword"
           value={formState.confirmPassword}
           onChange={handleChange}
           required
@@ -111,7 +116,7 @@ const Register = () => {
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
 
-      <button type="submit">Change Password</button>
+      <button type="submit">Create User</button>
     </form>
   );
 }
