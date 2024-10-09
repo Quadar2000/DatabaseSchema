@@ -1,5 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
+import { fetchData } from 'next-auth/client/_utils';
+import  databaseClient from '@/app/backendFunctions/database-client';
+import html2canvas from 'html2canvas';
 
 const SchemaDiagram = () => {
   const d3Container = useRef(null);
@@ -7,29 +10,69 @@ const SchemaDiagram = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const [tables, setTables] = useState([]);
+  const [data, setData] = useState({nodes: [], links: []});
+  const [url, setUrl] = useState("not connected");
 
-  useEffect(() => { 
-    const fetchData = async () => {
+  const calculateSVGSize = () => {
+    const padding = 50; // Dodajemy trochę miejsca dookoła
+    const maxX = Math.max(...data.nodes.map(table => table.x)) + 200; // Szerokość, uwzględniamy największą pozycję X
+    const maxY = Math.max(...data.nodes.map(table => table.y)) + 200; // Wysokość, uwzględniamy największą pozycję Y
+    return {
+      width: maxX + padding,
+      height: maxY + padding
+    };
+  };
+
+  const downloadPNG = () => {
+    const svgElement = d3Container.current;
+  
+    // Klonowanie elementu SVG i jego atrybutów
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgElement);
+    
+    const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+  
+    // Tworzenie elementu obrazu z danych SVG
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = svgElement.clientWidth;
+      canvas.height = svgElement.clientHeight;
+      const context = canvas.getContext("2d");
+  
+      // Rysowanie SVG na kanwie
+      context.drawImage(image, 0, 0);
+      URL.revokeObjectURL(url);
+  
+      // Konwersja kanwy na obraz PNG
+      const pngUrl = canvas.toDataURL("image/png");
+  
+      // Pobranie pliku PNG
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngUrl;
+      downloadLink.download = 'diagram.png';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    };
+  
+    image.src = url;
+  };
+  
+  useEffect(() => {
+    if (databaseClient.connectedUrl) {
+      setUrl(databaseClient.connectedUrl);
+    }
+  }, [databaseClient.connectedUrl]);
+
+  const fetchData = async () => {
 
     if (showDiagram && d3Container.current) {
 
       d3.select(d3Container.current).selectAll('*').remove();
-
-      const svg = d3.select(d3Container.current)
-        .append('g') // Grupa wewnątrz SVG do przesuwania i zoomowania
-        .call(d3.zoom().on('zoom', (event) => {
-          svg.attr('transform', event.transform);
-        }));
-
-        setError("");
-        setSuccess("");
-
-        
-      const tables1 = [
-        { name: 'Table1', columns: ['id', 'name', 'created_at'], x: 100, y: 100 },
-        { name: 'Table2', columns: ['id', 'user_id', 'order_id', 'date'], x: 300, y: 200 }
-      ];
+      setError("");
+      setSuccess("");
 
       try {
         const res = await fetch("/api/database-schema", {
@@ -41,7 +84,8 @@ const SchemaDiagram = () => {
 
         if (res.ok) {
           const data = await res.json();
-          setTables(data.tables);
+          setData(data.tables);
+          setSuccess(data.message);
         } else {
           const data = await res.json();
           setError(data.message || "Something went wrong");
@@ -50,12 +94,49 @@ const SchemaDiagram = () => {
         setError("Error fetching data");
       }
 
+      // const svg = d3.select(d3Container.current)
+      //   .append('g') // Grupa wewnątrz SVG do przesuwania i zoomowania
+      //   .call(d3.zoom().on('zoom', (event) => {
+      //     svg.attr('transform', event.transform);
+      //   }));
+
+      const svgSize = calculateSVGSize(); // Wyliczenie wymiarów SVG
+      const svg = d3.select(d3Container.current)
+        .attr('width', svgSize.width) // Ustawiamy dynamicznie szerokość SVG
+        .attr('height', svgSize.height) // Ustawiamy dynamicznie wysokość SVG
+        .append('g')
+        .call(d3.zoom().on('zoom', (event) => {
+          svg.attr('transform', event.transform);
+        }));
+
+      // const simulation = d3.forceSimulation(data.nodes)
+      //   .force('link', d3.forceLink(data.links).id(d => d.id).distance(200))
+      //   .force('charge', d3.forceManyBody().strength(-400))  // Siła odpychająca
+      //   .force('center', d3.forceCenter(svgSize.width / 2, svgSize.height / 2))  // Ustawienie w centrum
+      //   .on('tick', ticked);
+
       // Tworzenie prostokątów reprezentujących tabele
       const tableNodes = svg.selectAll('.table')
-        .data(tables1)
+        .data(data.nodes)
         .enter().append('g')
         .attr('class', 'table')
         .attr('transform', d => `translate(${d.x}, ${d.y})`);
+        // .call(d3.drag()
+        // .on('start', dragStarted)
+        // .on('drag', dragged)
+        // .on('end', dragEnded));
+
+      const link = svg.selectAll('.link')
+        .data(data.links)
+        .enter()
+        .append('line')
+        .attr('x1', d => d.source.x)
+        .attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x)
+        .attr('y2', d => d.target.y)
+        .attr('class', 'link')
+        .attr('stroke', '#999')
+        .attr('stroke-width', 2);
 
       // Dodanie prostokątów dla każdej tabeli
       tableNodes.append('rect')
@@ -68,7 +149,7 @@ const SchemaDiagram = () => {
       tableNodes.append('text')
         .attr('x', 10)
         .attr('y', 15)
-        .text(d => d.name)
+        .text(d => d.id)
         .attr('font-size', '14px')
         .attr('fill', '#000');
 
@@ -82,17 +163,48 @@ const SchemaDiagram = () => {
         .text(d => d)
         .attr('font-size', '12px')
         .attr('fill', '#000');
+
+
+
+        // function ticked() {
+        //   link
+        //     .attr('x1', d => d.source.x)
+        //     .attr('y1', d => d.source.y)
+        //     .attr('x2', d => d.target.x)
+        //     .attr('y2', d => d.target.y);
+    
+        //     tableNodes.attr('transform', d => `translate(${d.x},${d.y})`);
+        // }
+    
+    //     function dragStarted(event, d) {
+    //       if (!event.active) simulation.alphaTarget(0.3).restart();
+    //       d.fx = d.x;
+    //       d.fy = d.y;
+    //     }
+    
+    //     function dragged(event, d) {
+    //       d.fx = event.x;
+    //       d.fy = event.y;
+    //     }
+    
+    //     function dragEnded(event, d) {
+    //       if (!event.active) simulation.alphaTarget(0);
+    //       d.fx = null;
+    //       d.fy = null;
+    //     }
     }
 
   };
 
-  fetchData();
+  function clearAll() {
+    setShowDiagram(false);
+    setSuccess("");
+    setError("");
+    d3.select(d3Container.current).selectAll('*').remove();
+  }
 
-  return () => {
-    if (d3Container.current) {
-      d3.select(d3Container.current).selectAll('*').remove(); // Usunięcie poprzedniego diagramu
-    }
-  };
+  useEffect(() => { 
+    fetchData();
   }, [showDiagram]);
 
   
@@ -102,9 +214,17 @@ const SchemaDiagram = () => {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
-
       <div>
-        <button onClick={() => setShowDiagram(true)}>Generate Schema</button>
+        <label>Database: {url}</label>
+      </div>
+      <div>
+        <button onClick={() => setShowDiagram(true)}>Generate Diagram</button>
+      </div>
+      <div>
+        <button onClick={() => clearAll()}>Clear Diagram</button>
+      </div>
+      <div>
+        <button onClick={downloadPNG} disabled={!showDiagram}>Download PNG</button>
       </div>
       <div style={{ width: '100%', height: '600px', border: '1px solid #ccc' }}>
       <svg

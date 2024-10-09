@@ -30,6 +30,9 @@ const Navbar = () => {
           <Link href="/register">Register</Link>
         </li>
         <li>
+          <Link href="/connect">Connect To Database</Link>
+        </li>
+        <li>
           <button onClick={handleLogout}>Logout</button>
         </li>
       </ul>
