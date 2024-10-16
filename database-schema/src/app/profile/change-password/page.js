@@ -1,6 +1,7 @@
 "use client";
 
 import IsLoggedIn from '@/app/components/IsLoggedIn/IsLoggedIn';
+import StyledButton from '@/app/components/StyledButton/StyledButton';
 import { getCsrfToken, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
@@ -75,7 +76,7 @@ const ChangePassword = () => {
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
 
-      <button type="submit">Change Password</button>
+      <StyledButton type="submit">Change Password</StyledButton>
     </form>
   );
 }

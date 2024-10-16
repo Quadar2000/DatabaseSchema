@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { fetchData } from 'next-auth/client/_utils';
 import  databaseClient from '@/app/backendFunctions/database-client';
 import html2canvas from 'html2canvas';
+import StyledButton from '../StyledButton/StyledButton';
 
 const SchemaDiagram = () => {
   const d3Container = useRef(null);
@@ -11,7 +12,6 @@ const SchemaDiagram = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState({nodes: [], links: []});
-  const [url, setUrl] = useState("not connected");
 
   const calculateSVGSize = () => {
     const padding = 50; // Dodajemy trochę miejsca dookoła
@@ -59,12 +59,6 @@ const SchemaDiagram = () => {
   
     image.src = url;
   };
-  
-  useEffect(() => {
-    if (databaseClient.connectedUrl) {
-      setUrl(databaseClient.connectedUrl);
-    }
-  }, [databaseClient.connectedUrl]);
 
   const fetchData = async () => {
 
@@ -109,35 +103,46 @@ const SchemaDiagram = () => {
           svg.attr('transform', event.transform);
         }));
 
-      // const simulation = d3.forceSimulation(data.nodes)
-      //   .force('link', d3.forceLink(data.links).id(d => d.id).distance(200))
-      //   .force('charge', d3.forceManyBody().strength(-400))  // Siła odpychająca
-      //   .force('center', d3.forceCenter(svgSize.width / 2, svgSize.height / 2))  // Ustawienie w centrum
-      //   .on('tick', ticked);
+      const simulation = d3.forceSimulation(data.nodes)
+        .force('link', d3.forceLink(data.links).id(d => d.id).distance(200))
+        .force('charge', d3.forceManyBody().strength(-400))  // Siła odpychająca
+        .force('center', d3.forceCenter(svgSize.width / 2, svgSize.height / 2)) // Ustawienie w centrum
+        .force('xGrouping', forceXGrouping(200))
+        .on('tick', ticked);
 
       // Tworzenie prostokątów reprezentujących tabele
       const tableNodes = svg.selectAll('.table')
         .data(data.nodes)
         .enter().append('g')
-        .attr('class', 'table')
-        .attr('transform', d => `translate(${d.x}, ${d.y})`);
+        .attr('class', 'table');
+        //.attr('transform', d => `translate(${d.x}, ${d.y})`);
         // .call(d3.drag()
         // .on('start', dragStarted)
         // .on('drag', dragged)
         // .on('end', dragEnded));
 
+        
+
+      // const link = svg.selectAll('.link')
+      //   .data(data.links)
+      //   .enter()
+      //   .append('line')
+      //   .attr('x1', d => d.source.x)
+      //   .attr('y1', d => d.source.y)
+      //   .attr('x2', d => d.target.x)
+      //   .attr('y2', d => d.target.y)
+      //   .attr('class', 'link')
+      //   .attr('stroke', '#999')
+      //   .attr('stroke-width', 2);
+      
       const link = svg.selectAll('.link')
         .data(data.links)
         .enter()
-        .append('line')
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y)
+        .append('path')
         .attr('class', 'link')
+        .attr('fill', 'none')
         .attr('stroke', '#999')
         .attr('stroke-width', 2);
-
       // Dodanie prostokątów dla każdej tabeli
       tableNodes.append('rect')
         .attr('width', 120)
@@ -166,32 +171,60 @@ const SchemaDiagram = () => {
 
 
 
-        // function ticked() {
-        //   link
-        //     .attr('x1', d => d.source.x)
-        //     .attr('y1', d => d.source.y)
-        //     .attr('x2', d => d.target.x)
-        //     .attr('y2', d => d.target.y);
+        function ticked() {
+          // link
+          //   .attr('x1', d => d.source.x)
+          //   .attr('y1', d => d.source.y)
+          //   .attr('x2', d => d.target.x)
+          //   .attr('y2', d => d.target.y);
+          link.attr('d', d => {
+            if(d.source.x > d.target.x) {
+              const midX = (d.source.x + 120 + d.target.x) / 2; // Środkowy punkt na osi X
+              return `M${d.source.x},${d.source.y} 
+                      H${midX} 
+                      V${d.target.y} 
+                      H${d.target.x + 120}`;
+            } else {
+              const midX = (d.source.x + 120 + d.target.x) / 2; // Środkowy punkt na osi X
+              return `M${d.source.x + 120},${d.source.y} 
+                      H${midX} 
+                      V${d.target.y} 
+                      H${d.target.x}`;
+            }
+            
+          });
+            tableNodes.attr('transform', d => `translate(${d.x},${d.y})`);
+        }
+
+        function forceXGrouping(separation) {
+          return function () {
+            data.nodes.forEach(node => {
+              if (node.group === 1) {
+                node.x = Math.max(node.x, separation);
+              } else if (node.group === 2) {
+                node.x = Math.min(node.x, -separation);
+              }
+              // Możesz dostosować więcej grup
+            });
+          };
+        }
     
-        //     tableNodes.attr('transform', d => `translate(${d.x},${d.y})`);
+        // function dragStarted(event, d) {
+        //   if (!event.active) simulation.alphaTarget(0.3).restart();
+        //   d.fx = d.x;
+        //   d.fy = d.y;
         // }
     
-    //     function dragStarted(event, d) {
-    //       if (!event.active) simulation.alphaTarget(0.3).restart();
-    //       d.fx = d.x;
-    //       d.fy = d.y;
-    //     }
+        // function dragged(event, d) {
+        //   d.fx = event.x;
+        //   d.fy = event.y;
+        // }
     
-    //     function dragged(event, d) {
-    //       d.fx = event.x;
-    //       d.fy = event.y;
-    //     }
-    
-    //     function dragEnded(event, d) {
-    //       if (!event.active) simulation.alphaTarget(0);
-    //       d.fx = null;
-    //       d.fy = null;
-    //     }
+        // function dragEnded(event, d) {
+        //   if (!event.active) simulation.alphaTarget(0);
+        //   d.fx = null;
+        //   d.fy = null;
+        // }
     }
 
   };
@@ -215,16 +248,13 @@ const SchemaDiagram = () => {
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
       <div>
-        <label>Database: {url}</label>
+        <StyledButton onClick={() => setShowDiagram(true)}>Generate Diagram</StyledButton>
       </div>
       <div>
-        <button onClick={() => setShowDiagram(true)}>Generate Diagram</button>
+        <StyledButton onClick={() => clearAll()}>Clear Diagram</StyledButton>
       </div>
       <div>
-        <button onClick={() => clearAll()}>Clear Diagram</button>
-      </div>
-      <div>
-        <button onClick={downloadPNG} disabled={!showDiagram}>Download PNG</button>
+        <StyledButton onClick={downloadPNG} disabled={!showDiagram}>Download PNG</StyledButton>
       </div>
       <div style={{ width: '100%', height: '600px', border: '1px solid #ccc' }}>
       <svg

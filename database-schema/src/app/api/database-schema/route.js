@@ -29,25 +29,58 @@ export async function GET(req) {
       const res = await client.query('SELECT * FROM information_schema.tables');
       console.log(res.rows);
 
+        // const rawTables = {
+        //   nodes: [
+        //     { id: 'Table1', columns: ['id', 'name', 'created_at'],x: 100, y: 100 },
+        //     { id: 'Table5', columns: ['id', 'description'],x: 300, y: 200 },
+        //     { id: 'Table2', columns: ['id', 'user_id', 'order_id', 'date'],x: 500, y: 300 },
+        //     { id: 'Table4', columns: ['id', 'description'],x: 700, y: 400 },
+        //     { id: 'Table3', columns:  ['id', 'description', 'price'],x: 900, y: 500},
+        //     { id: 'Table6', columns: ['id', 'description'],x: 1100, y: 600 },
+        //   ],
+        //   links: [
+        //     { source: 'Table1', target: 'Table2', type: 'one-to-many' },  // relacja jeden-do-wielu
+        //     { source: 'Table3', target: 'Table2', type: 'many-to-many' },
+        //     { source: 'Table6', target: 'Table5', type: 'many-to-many' }    // relacja wiele-do-wielu
+        //   ]
+        // };
+
+        // const tables = {
+        //   nodes: [
+        //     { id: 'Table1', columns: ['id', 'name', 'created_at'],x: 100, y: 100 },
+        //     { id: 'Table5', columns: ['id', 'description'],x: 100, y: 100 },
+        //     { id: 'Table2', columns: ['id', 'user_id', 'order_id', 'date'],x: 100, y: 100 },
+        //     { id: 'Table4', columns: ['id', 'description'],x: 100, y: 100 },
+        //     { id: 'Table3', columns:  ['id', 'description', 'price'],x: 100, y: 100},
+        //     { id: 'Table6', columns: ['id', 'description'],x: 1100, y: 600 },
+        //   ],
+        //   links: [
+        //     { source: 'Table1', target: 'Table2', type: 'one-to-many' },  // relacja jeden-do-wielu
+        //     { source: 'Table3', target: 'Table2', type: 'many-to-many' },
+        //     { source: 'Table6', target: 'Table5', type: 'many-to-many' }    // relacja wiele-do-wielu
+        //   ]
+        // };
+
         const rawTables = {
           nodes: [
-            { id: 'Table1', columns: ['id', 'name', 'created_at'],x: 100, y: 100 },
-            { id: 'Table2', columns: ['id', 'user_id', 'order_id', 'date'],x: 300, y: 200 },
-            { id: 'Table4', columns: ['id', 'description'],x: 700, y: 300 },
-            { id: 'Table3', columns:  ['id', 'description', 'price'],x: 500, y: 300}
+            { id: 'Table1', columns: ['id', 'name', 'created_at'] },
+            { id: 'Table5', columns: ['id', 'description']},
+            { id: 'Table2', columns: ['id', 'user_id', 'order_id', 'date'] },
+            { id: 'Table4', columns: ['id', 'description'] },
+            { id: 'Table3', columns:  ['id', 'description', 'price']},
+            { id: 'Table6', columns: ['id', 'description'] },
           ],
           links: [
             { source: 'Table1', target: 'Table2', type: 'one-to-many' },  // relacja jeden-do-wielu
-            { source: 'Table3', target: 'Table2', type: 'many-to-many' }   // relacja wiele-do-wielu
+            { source: 'Table3', target: 'Table1', type: 'many-to-many' },
+            { source: 'Table6', target: 'Table5', type: 'many-to-many' },
+            { source: 'Table4', target: 'Table1', type: 'many-to-many' }     // relacja wiele-do-wielu
           ]
         };
 
         const groupedTables = groupTablesBFS(rawTables.nodes,rawTables.links);
 
         //const groupedTables = rawTables.nodes;
-
-        let x = 100;
-        let y = 100;
 
         const tables = {
           nodes: groupedTables.flatMap(group => group.map(table => ({

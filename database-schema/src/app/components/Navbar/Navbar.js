@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import styles from './Navbar.module.css';
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
+import StyledButton from "../StyledButton/StyledButton";
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -33,7 +34,7 @@ const Navbar = () => {
           <Link href="/connect">Connect To Database</Link>
         </li>
         <li>
-          <button onClick={handleLogout}>Logout</button>
+          <StyledButton onClick={handleLogout}>Logout</StyledButton>
         </li>
       </ul>
     </nav>

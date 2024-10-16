@@ -4,6 +4,7 @@ import IsLoggedIn from '@/app/components/IsLoggedIn/IsLoggedIn';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import styles from "./profile.module.css";
+import StyledButton from '../components/StyledButton/StyledButton';
 
 const Profile = () => {
     const { data: session } = useSession();
@@ -18,7 +19,7 @@ const Profile = () => {
         <p>{session.user.name}</p>
         <h1>Email</h1>
         <p>{session.user.email}</p>
-        <button className = {styles.card} onClick = {handleChangePasswordClick}>Change Password</button>
+        <StyledButton onClick = {handleChangePasswordClick}>Change Password</StyledButton>
     </div>
         );
 }
