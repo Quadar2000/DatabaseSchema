@@ -14,10 +14,12 @@ const ChangePassword = () => {
 
   useEffect(() => {
     const fetchCsrfToken = async () => {
-      const token = await getCsrfToken();
-      setCsrfToken(token);
+      const res = await fetch('/api/change-password', {method: "GET"});
+      const data = await res.json();
+      setCsrfToken(data.csrfToken);
     };
-    fetchCsrfToken();
+
+    fetchCsrfToken()
   }, []);
 
   const handleSubmit = async (e) => {
@@ -35,6 +37,7 @@ const ChangePassword = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        'csrf-token': csrfToken,
       },
       body: JSON.stringify({
         newPassword: newPassword,

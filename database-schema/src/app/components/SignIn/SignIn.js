@@ -3,6 +3,7 @@
 import { getCsrfToken,signIn } from 'next-auth/react';
 import { useState } from 'react';
 import styles from './signInStyle.module.css'
+import StyledButton from '../StyledButton/StyledButton';
 
 export default function SignIn() {
 
@@ -39,7 +40,7 @@ export default function SignIn() {
          <input id="password" name="password" type="password" required />
          <br />
          <br />
-         <button type="submit">Sign in</button>
+         <StyledButton type="submit">Sign in</StyledButton>
          <br />
          <br />
          {error && <div>{error}</div>}

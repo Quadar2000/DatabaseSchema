@@ -27,12 +27,16 @@ const Navbar = () => {
         <li>
           <Link href="/profile">Profile</Link>
         </li>
-        <li>
-          <Link href="/register">Register</Link>
-        </li>
-        <li>
-          <Link href="/connect">Connect To Database</Link>
-        </li>
+        {session.user.role === 'admin' && (
+          <>
+            <li>
+              <Link href="/register">Register</Link>
+            </li>
+            <li>
+              <Link href="/users">Users List</Link>
+            </li>
+          </>
+        )}
         <li>
           <StyledButton onClick={handleLogout}>Logout</StyledButton>
         </li>

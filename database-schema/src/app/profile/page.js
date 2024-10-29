@@ -21,8 +21,8 @@ const Profile = () => {
         <p>{session.user.email}</p>
         <StyledButton onClick = {handleChangePasswordClick}>Change Password</StyledButton>
     </div>
-        );
-}
+    );
+};
 
 
 export default IsLoggedIn(Profile);

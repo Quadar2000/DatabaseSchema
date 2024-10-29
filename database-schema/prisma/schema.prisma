@@ -52,6 +52,8 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  databasePermissions DatabasePermission[]
+  accessTokens AccessToken[]
 }
 
 model VerificationToken {
@@ -60,4 +62,28 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model DatabasePermission {
+  id        String   @id @default(cuid())
+  userId    String
+  dbName    String  
+  dbUser    String
+  dbHost    String
+  dbPort    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dbName, dbHost])
+}
+
+model AccessToken {
+  id          String   @id @default(uuid())
+  userId      String
+  token       String   @unique
+  expiryDate  DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

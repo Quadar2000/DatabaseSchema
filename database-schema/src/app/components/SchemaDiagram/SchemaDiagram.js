@@ -1,9 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { fetchData } from 'next-auth/client/_utils';
-import  databaseClient from '@/app/backendFunctions/database-client';
-import html2canvas from 'html2canvas';
 import StyledButton from '../StyledButton/StyledButton';
+import '../Spinner/spinner.module.css';
 
 const SchemaDiagram = () => {
   const d3Container = useRef(null);
@@ -11,16 +9,26 @@ const SchemaDiagram = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState("");
+  const [host, setHost] = useState("");
+  const [database, setDatabase] = useState("");
+  const [password, setPassword] = useState("");
+  const [port, setPort] = useState("");
   const [data, setData] = useState({nodes: [], links: []});
 
   const calculateSVGSize = () => {
-    const padding = 50; // Dodajemy trochę miejsca dookoła
-    const maxX = Math.max(...data.nodes.map(table => table.x)) + 200; // Szerokość, uwzględniamy największą pozycję X
-    const maxY = Math.max(...data.nodes.map(table => table.y)) + 200; // Wysokość, uwzględniamy największą pozycję Y
+    const padding = 200; // Dodajemy trochę miejsca dookoła
+    const maxX = Math.max(...data.nodes.map(table => table.x)) + 300; // Szerokość, uwzględniamy największą pozycję X
+    const maxY = Math.max(...data.nodes.map(table => table.y)) + 300; // Wysokość, uwzględniamy największą pozycję Y
     return {
       width: maxX + padding,
       height: maxY + padding
     };
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setShowDiagram(true);
   };
 
   const downloadPNG = () => {
@@ -60,47 +68,19 @@ const SchemaDiagram = () => {
     image.src = url;
   };
 
-  const fetchData = async () => {
+  
 
-    if (showDiagram && d3Container.current) {
-
-      d3.select(d3Container.current).selectAll('*').remove();
-      setError("");
-      setSuccess("");
-
-      try {
-        const res = await fetch("/api/database-schema", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setData(data.tables);
-          setSuccess(data.message);
-        } else {
-          const data = await res.json();
-          setError(data.message || "Something went wrong");
-        }
-      } catch (error) {
-        setError("Error fetching data");
-      }
-
-      // const svg = d3.select(d3Container.current)
-      //   .append('g') // Grupa wewnątrz SVG do przesuwania i zoomowania
-      //   .call(d3.zoom().on('zoom', (event) => {
-      //     svg.attr('transform', event.transform);
-      //   }));
-
-      const svgSize = calculateSVGSize(); // Wyliczenie wymiarów SVG
+  const renderDiagram = () => {
+    const svgSize = calculateSVGSize(); // Wyliczenie wymiarów SVG
       const svg = d3.select(d3Container.current)
         .attr('width', svgSize.width) // Ustawiamy dynamicznie szerokość SVG
         .attr('height', svgSize.height) // Ustawiamy dynamicznie wysokość SVG
         .append('g')
-        .call(d3.zoom().on('zoom', (event) => {
-          svg.attr('transform', event.transform);
+        .call(d3.zoom()
+          .scaleExtent([0.5, 10])  // ogranicza zakres zoomowania od 0.5x do 5x
+          .translateExtent([[0, 0], [svgSize.width + 1000, svgSize.height + 1000]])
+          .on('zoom', (event) => {
+            svg.attr('transform', event.transform);
         }));
 
       const simulation = d3.forceSimulation(data.nodes)
@@ -120,20 +100,6 @@ const SchemaDiagram = () => {
         // .on('start', dragStarted)
         // .on('drag', dragged)
         // .on('end', dragEnded));
-
-        
-
-      // const link = svg.selectAll('.link')
-      //   .data(data.links)
-      //   .enter()
-      //   .append('line')
-      //   .attr('x1', d => d.source.x)
-      //   .attr('y1', d => d.source.y)
-      //   .attr('x2', d => d.target.x)
-      //   .attr('y2', d => d.target.y)
-      //   .attr('class', 'link')
-      //   .attr('stroke', '#999')
-      //   .attr('stroke-width', 2);
       
       const link = svg.selectAll('.link')
         .data(data.links)
@@ -143,9 +109,10 @@ const SchemaDiagram = () => {
         .attr('fill', 'none')
         .attr('stroke', '#999')
         .attr('stroke-width', 2);
+
       // Dodanie prostokątów dla każdej tabeli
       tableNodes.append('rect')
-        .attr('width', 120)
+        .attr('width', 140)
         .attr('height', d => 20 + d.columns.length * 20)
         .attr('fill', '#ccc')
         .attr('stroke', '#000');
@@ -172,11 +139,6 @@ const SchemaDiagram = () => {
 
 
         function ticked() {
-          // link
-          //   .attr('x1', d => d.source.x)
-          //   .attr('y1', d => d.source.y)
-          //   .attr('x2', d => d.target.x)
-          //   .attr('y2', d => d.target.y);
           link.attr('d', d => {
             if(d.source.x > d.target.x) {
               const midX = (d.source.x + 120 + d.target.x) / 2; // Środkowy punkt na osi X
@@ -227,8 +189,6 @@ const SchemaDiagram = () => {
         // }
     }
 
-  };
-
   function clearAll() {
     setShowDiagram(false);
     setSuccess("");
@@ -237,31 +197,134 @@ const SchemaDiagram = () => {
   }
 
   useEffect(() => { 
+    const fetchData = async () => {
+
+      if (showDiagram && d3Container.current) {
+  
+        setLoading(true);
+        d3.select(d3Container.current).selectAll('*').remove();
+        setError("");
+        setSuccess("");
+  
+        try {
+          const res = await fetch("/api/database-schema", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user: user,
+              host: host,
+              database: database,
+              password: password,
+              port: port,
+            }),
+          });
+  
+          if (res.ok) {
+            const data = await res.json();
+            setData(data.tables);
+            setSuccess(data.message);
+            // setUser("");
+            // setHost("");
+            // setDatabase("");
+            // setPassword("");
+            // setPort("");
+          } else {
+            const data = await res.json();
+            setError(data.message || "Something went wrong");
+          }
+        } catch (error) {
+          setError(error.message);
+        }
+        finally{
+          setLoading(false);
+        }
+      };
+  
+    };
+
     fetchData();
   }, [showDiagram]);
 
+  useEffect(() => { 
+    if (showDiagram && data.nodes.length > 0) {
+      renderDiagram();
+    }
+  }, [showDiagram, data]);
   
 
   return (
     <div style={{ width: '100%', height: '600px'}}>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
       <div>
-        <StyledButton onClick={() => setShowDiagram(true)}>Generate Diagram</StyledButton>
+        <form onSubmit={handleSubmit}>
+          <label>User</label>
+          <br />
+          <input 
+            type="text" 
+            value={user}
+            onChange={(e) => setUser(e.target.value)}
+            required 
+          />
+          <br />
+          <label>Host</label>
+          <br />
+          <input 
+            type="text" 
+            value={host}
+            onChange={(e) => setHost(e.target.value)}
+            required 
+          />
+          <br />
+          <label>Database</label>
+          <br />
+          <input 
+            type="text" 
+            value={database}
+            onChange={(e) => setDatabase(e.target.value)}
+            required 
+          />
+          <br />
+          <br />
+          <label>Password</label>
+          <br />
+          <input 
+            type="password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required 
+          />
+          <br />
+          <label>Port</label>
+          <br />
+          <input 
+            type="text" 
+            value={port}
+            onChange={(e) => setPort(e.target.value)}
+            required 
+          />
+          <br />
+          <br />
+          <StyledButton type = "submit">Generate Diagram</StyledButton>
+          <br />
+          <br />
+        </form>
       </div>
       <div>
         <StyledButton onClick={() => clearAll()}>Clear Diagram</StyledButton>
       </div>
+      <br />
       <div>
         <StyledButton onClick={downloadPNG} disabled={!showDiagram}>Download PNG</StyledButton>
       </div>
+      <br />
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>{success}</p>}
+      <br />
       <div style={{ width: '100%', height: '600px', border: '1px solid #ccc' }}>
-      <svg
-        ref={d3Container}
-        style={{ width: '100%', height: '100%' }}
-      />
+      {loading ? <div className="spinner"><p>Loading...</p></div> : <svg ref={d3Container} style={{ width: '100%', height: '100%' }} />}
       </div>
+      <br />
     </div>
     
   );
