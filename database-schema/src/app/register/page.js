@@ -3,6 +3,9 @@
 import WithRole from "../components/WithRole/WithRole";
 import { getCsrfToken, useSession } from 'next-auth/react';
 import { useEffect, useState, useReducer } from 'react';
+import StyledDiv from "../components/StyledDiv/StyledDiv";
+import StyledForm from "../components/StyledForm/StyledForm";
+import StyledButton from "../components/StyledButton/StyledButton";
 
 const formReducer = (state, action) => {
     return {
@@ -67,57 +70,62 @@ const Register = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input type="hidden" name="csrfToken" value={csrfToken} />
-      <div>
-        <label>Username</label>
-        <input
-          type="text"
-          name="name"
-          value={formState.name}
-          onChange={handleChange}
-          required
-        />
-      </div>
+    <StyledDiv style={{height: '600px'}}>
+      <h1>Create New User</h1>
+      <StyledForm onSubmit={handleSubmit}>
+        <input type="hidden" name="csrfToken" value={csrfToken} />
+        <div style={{flexDirection: 'column',display: 'flex'}}>
+          <label>Username</label>
+          <input
+            type="text"
+            name="name"
+            value={formState.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-      <div>
-        <label>Email</label>
-        <input
-          type="email"
-          name="email"
-          value={formState.email}
-          onChange={handleChange}
-          required
-        />
-      </div>
+        <div style={{flexDirection: 'column',display: 'flex'}}>
+          <label>Email</label>
+          <input
+            type="email"
+            name="email"
+            value={formState.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-      <div>
-        <label>Password</label>
-        <input
-          type="password"
-          name="password"
-          value={formState.password}
-          onChange={handleChange}
-          required
-        />
-      </div>
+        <div style={{flexDirection: 'column',display: 'flex'}}>
+          <label>Password</label>
+          <input
+            type="password"
+            name="password"
+            value={formState.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-      <div>
-        <label>Confirm Password</label>
-        <input
-          type="password"
-          name="confirmPassword"
-          value={formState.confirmPassword}
-          onChange={handleChange}
-          required
-        />
-      </div>
+        <div style={{flexDirection: 'column',display: 'flex'}}>
+          <label>Confirm Password</label>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={formState.confirmPassword}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
+        {success && <p style={{ color: "green" }}>{success}</p>}
 
-      <button type="submit">Create User</button>
-    </form>
+        <StyledButton type="submit">Create User</StyledButton>
+      </StyledForm>
+
+    </StyledDiv>
+    
   );
 }
 

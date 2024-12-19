@@ -5,6 +5,9 @@ import { useRouter,useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import StyledButton from '@/app/components/StyledButton/StyledButton';
 import ConfirmModal from '@/app/components/ConfirmModal/ConfirmModal';
+import StyledForm from '@/app/components/StyledForm/StyledForm';
+import StyledDiv from '@/app/components/StyledDiv/StyledDiv';
+import StyledListItem from '@/app/components/StyledListItem/StyledListItem';
 
 const Permissions = () => {
   const [isValid, setIsValid] = useState(false);
@@ -56,34 +59,34 @@ const Permissions = () => {
   }, [])
   
 
-  useEffect(() => {
-    const validate = async () => {
-      try {
-        const res = await fetch(`/api/validate-token`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: id,
-            token: token,
-          })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setIsValid(true);
-        } else {
-          router.replace('/');
-        }
-      } catch(error){
-        setError(error.message);
-      }
-    };
+  // useEffect(() => {
+  //   const validate = async () => {
+  //     try {
+  //       const res = await fetch(`/api/validate-token`, {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({
+  //           userId: id,
+  //           token: token,
+  //         })
+  //       });
+  //       const data = await res.json();
+  //       if (data.success) {
+  //         setIsValid(true);
+  //       } else {
+  //         router.replace('/');
+  //       }
+  //     } catch(error){
+  //       setError(error.message);
+  //     }
+  //   };
 
-    if (token) validate();
-  }, [token]);
+  //   if (token) validate();
+  // }, [token]);
 
-  if (!isValid) {
-    return <p>loading...</p>;
-  }
+  // if (!isValid) {
+  //   return <p>loading...</p>;
+  // }
 
   const deletePermission = async (permission) => {
     setSuccess("");
@@ -166,22 +169,105 @@ const Permissions = () => {
   };
 
   return (
-    <div>
-      {permissionsError && <p style={{ color: "red" }}>{permissionsError}</p>}
-      <h1>Username</h1>
-        <p>{user.name}</p>
-        <h1>Email</h1>
-        <p>{user.email}</p>
+    <StyledDiv style={{gap: '50px'}}>
+      <div style={{display: 'flex', gap: '80px'}}>
+        <div style={{borderRight: '1px solid #eaeaea'}}></div>
+        <StyledDiv>
+          <h1>Username</h1>
+          <p>{user.name}</p>
+        </StyledDiv>
+        <div style={{borderRight: '1px solid #eaeaea'}}></div>
+        <StyledDiv>
+          <h1>Email</h1>
+          <p>{user.email}</p>
+        </StyledDiv>
+        <div style={{borderRight: '1px solid #eaeaea'}}></div>
+        
+      </div>
+      <div style={{padding: '20px',borderBottom: '1px solid #eaeaea', width: '95%'}}></div>
+      <StyledDiv >
+          <h1>Grant new permission of access to database</h1>
+          <p>Enter data of database</p>
+          <StyledForm style={{flexDirection: 'row'}}onSubmit={handleSubmit}>
+
+            <div style={{flexDirection: 'column',display: 'flex'}}>
+              <label>User</label>
+              <input 
+                type="text" 
+                value={dbUser}
+                onChange={(e) => setDbUser(e.target.value)}
+                required 
+              />
+            </div>
+
+            <div style={{flexDirection: 'column',display: 'flex'}}>
+              <label>Host</label>
+              <input 
+                type="text" 
+                value={host}
+                onChange={(e) => setHost(e.target.value)}
+                required 
+              />
+            </div>
+
+            <div style={{flexDirection: 'column',display: 'flex'}}>
+              <label>Database</label>
+              <input 
+                type="text" 
+                value={database}
+                onChange={(e) => setDatabase(e.target.value)}
+                required 
+              />
+            </div>
+
+            <div style={{flexDirection: 'column',display: 'flex'}}>
+              <label>Password</label>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
+              />
+            </div>
+
+            <div style={{flexDirection: 'column',display: 'flex'}}>
+              <label>Port</label>
+              <input 
+                type="text" 
+                value={port}
+                onChange={(e) => setPort(e.target.value)}
+                required 
+              />
+            </div>
+
+            <StyledButton type = "submit">Grant permission</StyledButton>
+          </StyledForm>
+
+        </StyledDiv>
+      <div style={{padding: '20px',borderTop: '1px solid #eaeaea', width: '95%'}}></div>
       <h1>Permitted Databases</h1>
+      {permissionsError && <p style={{ color: "red" }}>{permissionsError}</p>}
       {permissions.length == 0 ? <p>Currently this user has no permission to access to any database.</p> :
       <ul>
+        <StyledListItem>
+          <div className="column">Database</div>
+          <div className="column">Database User</div>
+          <div className="column">Host</div>
+          <div className="column">Port</div>
+          <div className="actions"></div>
+        </StyledListItem>
         {permissions.map(permission => (
-          <li key={permission.dbName}>
-            {permission.dbName}
-            <StyledButton onClick={() => openModal(permission)}>
-              Delete permission
-            </StyledButton>
-          </li>
+          <StyledListItem key={permission.dbName}>
+            <div className="column" style={{width: '90px'}}>{permission.dbName}</div>
+            <div className="column" style={{width: '90px'}}>{permission.dbUser}</div>
+            <div className="column" style={{width: '90px'}}>{permission.dbHost}</div>
+            <div className="column" style={{width: '90px'}}>{permission.dbPort}</div>
+            <div className="actions">
+              <StyledButton onClick={() => openModal(permission)}>
+                Delete permission
+              </StyledButton>
+            </div>
+          </StyledListItem>
         ))}
       </ul>}
       {isModalOpen && (
@@ -191,64 +277,12 @@ const Permissions = () => {
           onCancel={closeModal}
         />
       )}
-      <h1>Grant new permission of access to database</h1>
-      <p>Enter data of database</p>
-      <form onSubmit={handleSubmit}>
-          <label>User</label>
-          <br />
-          <input 
-            type="text" 
-            value={dbUser}
-            onChange={(e) => setDbUser(e.target.value)}
-            required 
-          />
-          <br />
-          <label>Host</label>
-          <br />
-          <input 
-            type="text" 
-            value={host}
-            onChange={(e) => setHost(e.target.value)}
-            required 
-          />
-          <br />
-          <label>Database</label>
-          <br />
-          <input 
-            type="text" 
-            value={database}
-            onChange={(e) => setDatabase(e.target.value)}
-            required 
-          />
-          <br />
-          <br />
-          <label>Password</label>
-          <br />
-          <input 
-            type="password" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required 
-          />
-          <br />
-          <label>Port</label>
-          <br />
-          <input 
-            type="text" 
-            value={port}
-            onChange={(e) => setPort(e.target.value)}
-            required 
-          />
-          <br />
-          <br />
-          <StyledButton type = "submit">Grant permission</StyledButton>
-          <br />
-          <br />
-        </form>
-        {loading && <p>loading...</p>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
-    </div>
+      
+
+      {loading && <p>loading...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>{success}</p>}
+    </StyledDiv>
   );
 };
 
