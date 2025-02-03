@@ -1,10 +1,17 @@
 const { PrismaClient } = require('@prisma/client');
+import Client from "pg/lib/client";
 const bcrypt = require('bcryptjs');
 
-const prisma = new PrismaClient();
+const client = new Client({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'users',
+  password: 'QWERTY123',
+  port: 5432,
+});
 
 async function createUser() {
-  const name = 'Emil Styrcz';
+  const name = 'Jan Kowalski';
   const email = 'admin@example.com'; // Podaj adres email użytkownika
   const plainPassword = '@Werty123'; // Podaj hasło użytkownika
   const role = 'admin'; // Podaj rolę użytkownika, np. 'user', 'admin'
@@ -22,6 +29,9 @@ async function createUser() {
     },
   });
 
+  
+  client.connect();
+
   console.log('Utworzono użytkownika:', user);
 }
 
@@ -30,5 +40,6 @@ createUser()
     console.error(e);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    // await prisma.$disconnect();
+    client.end();
   });

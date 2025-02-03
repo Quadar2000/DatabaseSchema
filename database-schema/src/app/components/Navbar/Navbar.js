@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import styles from './Navbar.module.css';
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
+import StyledButton from "../StyledButton/StyledButton";
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -26,11 +27,18 @@ const Navbar = () => {
         <li>
           <Link href="/profile">Profile</Link>
         </li>
+        {session.user.role === 'admin' && (
+          <>
+            <li>
+              <Link href="/register">Register</Link>
+            </li>
+            <li>
+              <Link href="/users">Users List</Link>
+            </li>
+          </>
+        )}
         <li>
-          <Link href="/register">Register</Link>
-        </li>
-        <li>
-          <button onClick={handleLogout}>Logout</button>
+          <StyledButton onClick={handleLogout}>Logout</StyledButton>
         </li>
       </ul>
     </nav>

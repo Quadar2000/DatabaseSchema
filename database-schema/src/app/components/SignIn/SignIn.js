@@ -2,7 +2,8 @@
 
 import { getCsrfToken,signIn } from 'next-auth/react';
 import { useState } from 'react';
-import styles from './signInStyle.module.css'
+import StyledDiv from '../StyledDiv/StyledDiv';
+import StyledButton from '../StyledButton/StyledButton';
 
 export default function SignIn() {
 
@@ -26,9 +27,9 @@ export default function SignIn() {
   };
 
   return (
-    <div className={styles.signInStyle}>
+    <StyledDiv>
     <form onSubmit={handleSubmit}>
-      <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
+      {/* <input name="csrfToken" type="hidden" defaultValue={csrfToken} /> */}
          <label>Email</label>
          <br />
          <input id="email" name="email" type="email" required />
@@ -39,12 +40,12 @@ export default function SignIn() {
          <input id="password" name="password" type="password" required />
          <br />
          <br />
-         <button type="submit">Sign in</button>
+         <StyledButton type="submit">Sign in</StyledButton>
          <br />
          <br />
          {error && <div>{error}</div>}
     </form>
-    </div>
+    </StyledDiv>
     
   );
 }

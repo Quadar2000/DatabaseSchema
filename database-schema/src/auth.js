@@ -38,8 +38,8 @@ export const authOptions = {
     signIn: '/page',
   },
   callbacks: {
-    async session({ session, token, user }) {
-      session.user.id = user?.id || token?.sub;
+    async session({ session, token }) {
+      session.user.id = token.sub;
       session.user.role = token.role
       return session;
     },
