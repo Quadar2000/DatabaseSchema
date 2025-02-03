@@ -1,0 +1,2 @@
+This is a web application allowing to generate schema of a PostgreSQL database. There are 2 types of users: Admin and ordinary user. Admin have acces to all databases, of which credentials they give (database user, user, password, host and port). 
+Ordinary User, besides the following, requiers permission to acces to databases given by admin. Schema is generated on web site and can be zoomed and moved; there is posibility to download it as PNG file. All web app is made in Next.js, and next-auth library is used to user managment. 
