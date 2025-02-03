@@ -9,6 +9,7 @@ import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
 import StyledDiv from "../components/StyledDiv/StyledDiv";
 import StyledListItem from "../components/StyledListItem/StyledListItem";
 import ColumnHeaders from "../components/ColumnHeaders/ColumnHeaders";
+import { getCsrfToken } from 'next-auth/react';
 
 const UsersList = () => {
   
@@ -19,6 +20,7 @@ const UsersList = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [csrfToken, setCsrfToken] = useState("");
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -43,6 +45,11 @@ const UsersList = () => {
 
   useEffect(() => {
     fetchUsers();
+    const fetchCsrfToken = async () => {
+      const token = await getCsrfToken();
+      setCsrfToken(token);
+    };
+    fetchCsrfToken();
   }, []);
 
   const deleteUser = async (user) => {
@@ -51,7 +58,10 @@ const UsersList = () => {
     try {
       const res = await fetch(`/api/delete-user`, {
         method: "DELETE", 
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          'X-CSRF-Token': csrfToken,
+        },
         body: JSON.stringify({userId: user.id }), 
       });
 
@@ -139,6 +149,7 @@ const UsersList = () => {
         />
       )}
       {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>{success}</p>}
     </StyledDiv>
   );
 };

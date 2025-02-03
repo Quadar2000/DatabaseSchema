@@ -12,17 +12,17 @@ const ChangePassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [csrfToken, setCsrfToken] = useState('');
+  const [csrfToken, setCsrfToken] = useState("");
 
-  // useEffect(() => {
-  //   const fetchCsrfToken = async () => {
-  //     const res = await fetch('/api/change-password', {method: "GET"});
-  //     const data = await res.json();
-  //     setCsrfToken(data.csrfToken);
-  //   };
+  useEffect(() => {
+    // Pobierz CSRF token podczas ładowania komponentu
+    const fetchCsrfToken = async () => {
+      const token = await getCsrfToken();
+      setCsrfToken(token);
+    };
+    fetchCsrfToken();
+  }, []);
 
-  //   fetchCsrfToken()
-  // }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +39,7 @@ const ChangePassword = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        'csrf-token': csrfToken,
+        'X-CSRF-Token': csrfToken,
       },
       body: JSON.stringify({
         newPassword: newPassword,
@@ -58,7 +58,6 @@ const ChangePassword = () => {
   return (
     <StyledDiv style={{height: '600px'}}>
       <StyledForm onSubmit={handleSubmit}>
-        <input type="hidden" name="csrfToken" value={csrfToken} />
         <div style={{flexDirection: 'column',display: 'flex'}}>
           <label>New Password</label>
           <input
@@ -79,11 +78,12 @@ const ChangePassword = () => {
           />
         </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
+        
 
         <StyledButton type="submit">Change Password</StyledButton>
       </StyledForm>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>{success}</p>}
     </StyledDiv>
     
   );

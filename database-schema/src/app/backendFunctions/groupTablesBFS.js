@@ -56,20 +56,12 @@ export default function groupTablesBFS(tables, relationships) {
         group.forEach(table => {
           table.x = x;
           table.y = y;
-          table.fixed = false;
           //console.log('name: ' + table.id + ', x: ' + table.x + ', y: ' + table.y + '\n')
           x += 200;
           y += 100;
         });
       x = 100;
       i++;
-      j++;
-      //group[0].fixed = true;
       });
-      const group = groupedTables[0]
-      group[0].fixed = true;
-
-      const group2 = groupedTables[i]
-      group2[j].fixed = true;
     return groupedTables;
   }

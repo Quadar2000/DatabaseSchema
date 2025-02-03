@@ -17,9 +17,7 @@ const formReducer = (state, action) => {
 const Register = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [csrfToken, setCsrfToken] = useState('');
-  const [newPassword, setNewPassword] = useState("");
-
+  const [csrfToken, setCsrfToken] = useState("");
   const [formState, dispatch] = useReducer(formReducer, {
     name: '',
     email: '',
@@ -28,12 +26,14 @@ const Register = () => {
   });
 
   useEffect(() => {
+    // Pobierz CSRF token podczas ładowania komponentu
     const fetchCsrfToken = async () => {
       const token = await getCsrfToken();
       setCsrfToken(token);
     };
     fetchCsrfToken();
   }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,6 +52,7 @@ const Register = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        'X-CSRF-Token': csrfToken,
       },
       body: JSON.stringify(formState),
     });
@@ -73,7 +74,6 @@ const Register = () => {
     <StyledDiv style={{height: '600px'}}>
       <h1>Create New User</h1>
       <StyledForm onSubmit={handleSubmit}>
-        <input type="hidden" name="csrfToken" value={csrfToken} />
         <div style={{flexDirection: 'column',display: 'flex'}}>
           <label>Username</label>
           <input
@@ -118,12 +118,12 @@ const Register = () => {
           />
         </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
+        
 
         <StyledButton type="submit">Create User</StyledButton>
       </StyledForm>
-
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>{success}</p>}
     </StyledDiv>
     
   );

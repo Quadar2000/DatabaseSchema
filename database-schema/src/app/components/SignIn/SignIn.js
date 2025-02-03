@@ -29,7 +29,7 @@ export default function SignIn() {
   return (
     <StyledDiv>
     <form onSubmit={handleSubmit}>
-      <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
+      {/* <input name="csrfToken" type="hidden" defaultValue={csrfToken} /> */}
          <label>Email</label>
          <br />
          <input id="email" name="email" type="email" required />

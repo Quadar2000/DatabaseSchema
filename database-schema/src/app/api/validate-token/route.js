@@ -8,16 +8,12 @@ export async function POST(req, res) {
     const dbToken = await prisma.accessToken.findFirst({
       where: { token, expiryDate: { gt: new Date() } }
     });
-    console.log("loking for token\n");
+    console.log("looking for token\n");
     if (!dbToken) {
       return new Response(JSON.stringify({ error: 'Invalid or expired token' }),{
         status: 400,
       });
     }
-    console.log("Deleting\n");
-    // Opcjonalnie oznaczamy token jako zużyty lub usuwamy go
-    await prisma.accessToken.delete({ where: { token } });
-    console.log("Deleted succesfuly\n");
     return new Response(JSON.stringify({ success: true }),{
       status: 200,
     });

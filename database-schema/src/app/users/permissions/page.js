@@ -8,6 +8,7 @@ import ConfirmModal from '@/app/components/ConfirmModal/ConfirmModal';
 import StyledForm from '@/app/components/StyledForm/StyledForm';
 import StyledDiv from '@/app/components/StyledDiv/StyledDiv';
 import StyledListItem from '@/app/components/StyledListItem/StyledListItem';
+import { getCsrfToken } from 'next-auth/react';
 
 const Permissions = () => {
   const [isValid, setIsValid] = useState(false);
@@ -24,6 +25,7 @@ const Permissions = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [permissionToDelete, setPermissionToDelete] = useState(null);
+  const [csrfToken, setCsrfToken] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,45 +58,55 @@ const Permissions = () => {
 
   useEffect(() => {
     fetchPermissions();
+    const fetchCsrfToken = async () => {
+      const token = await getCsrfToken();
+      setCsrfToken(token);
+    };
+    fetchCsrfToken();
   }, [])
   
 
-  // useEffect(() => {
-  //   const validate = async () => {
-  //     try {
-  //       const res = await fetch(`/api/validate-token`, {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({
-  //           userId: id,
-  //           token: token,
-  //         })
-  //       });
-  //       const data = await res.json();
-  //       if (data.success) {
-  //         setIsValid(true);
-  //       } else {
-  //         router.replace('/');
-  //       }
-  //     } catch(error){
-  //       setError(error.message);
-  //     }
-  //   };
+  useEffect(() => {
+    const validate = async () => {
+      try {
+        const res = await fetch(`/api/validate-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: id,
+            token: token,
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setIsValid(true);
+        } else {
+          router.replace('/');
+        }
+      } catch(error){
+        setError(error.message);
+      }
+    };
 
-  //   if (token) validate();
-  // }, [token]);
+    if (token) validate();
+  }, [token]);
 
-  // if (!isValid) {
-  //   return <p>loading...</p>;
-  // }
+  if (!isValid) {
+    return <p>loading...</p>;
+  }
 
   const deletePermission = async (permission) => {
     setSuccess("");
     setError("");
+   
     try {
       const res = await fetch(`/api/delete-permission`, {
         method: "DELETE", 
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          'X-CSRF-Token': csrfToken,
+
+        },
         body: JSON.stringify({ name: permission.dbName, host: permission.dbHost,userId: id }), 
       });
 
@@ -118,10 +130,14 @@ const Permissions = () => {
     setError("");
     setPermissionsError("");
     try {
+      const csrfToken = await getCsrfToken();
         
       const res = await fetch("/api/grant-permission", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          'X-CSRF-Token': csrfToken,
+        },
         body: JSON.stringify({
           user: dbUser,
           host: host,

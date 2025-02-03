@@ -11,7 +11,21 @@ import { authOptions } from "../auth/[...nextauth]/route";
 export async function POST(req) {
   try {
 
-    console.log('point 1\n');
+    const csrfToken = req.headers.get('x-csrf-token')
+
+    const cookies = req.headers.get('cookie'); // Pobranie nagłówka `cookie`
+
+    const validToken = cookies
+    ?.split('; ') // Rozdzielenie ciasteczek
+    .find(cookie => cookie.startsWith('next-auth.csrf-token=')) // Znalezienie odpowiedniego ciasteczka
+    ?.split('=')[1]
+    ?.split('%7C')[0];
+    
+    if (csrfToken !== validToken) {
+        return new Response(JSON.stringify({message: "Invalid CSRF token"}), {
+            status: 403,
+        });
+    }
 
     const session = await getServerSession(authOptions);
 
@@ -28,15 +42,6 @@ export async function POST(req) {
     }
 
     const {database, host, password, port, user } = await req.json();
-
-    // const client = new Client({
-    //   user: 'postgres',
-    //   host: 'localhost',
-    //   database: 'DatabaseSchema',
-    //   password: 'QWERTY123',
-    //   port: 5432,
-    // });
-    console.log('point 2\n');
 
     const client = new Client({
       user: user,
@@ -64,7 +69,7 @@ export async function POST(req) {
 
       if(!permission) {
         client.end();
-        return new Response(JSON.stringify({ message: 'This user dooesn not have permission to access to this database.'}), {
+        return new Response(JSON.stringify({ message: 'This user does not have permission to access to this database.'}), {
             status: 403,
           });
       }
@@ -133,7 +138,7 @@ export async function POST(req) {
 
     const tables = {
       nodes: groupedTables.flatMap(group => group.map(table => ({
-        id: table.id, columns: table.columns, x: table.x, y: table.y, fixed: table.fixed
+        id: table.id, columns: table.columns, x: table.x, y: table.y
       }))),
       links: rawTables.links.map(rel => ({
         source: rel.source,
@@ -143,95 +148,6 @@ export async function POST(req) {
         type: rel.type
       }))
     };
-
-  //   tables.links.forEach(link => {
-  //     link.source = tables.nodes.find(node => node.id === link.source);
-  //     link.target = tables.nodes.find(node => node.id === link.target);
-  //   });
-
- 
-
-  //   const calculateSVGSize = () => {
-  //     const padding = 1000; // Dodajemy trochę miejsca dookoła
-  //     const maxX = Math.max(...tables.nodes.map(table => table.x)); // Szerokość, uwzględniamy największą pozycję X
-  //     const maxY = Math.max(...tables.nodes.map(table => table.y)); // Wysokość, uwzględniamy największą pozycję Y
-  //     return {
-  //       width: maxX + padding,
-  //       height: maxY + padding
-  //     };
-  //   };
-
-  //   const svgSize = calculateSVGSize(); 
-
-  // //   tables.nodes.forEach(node => {
-  // //     node.x = Math.random() * svgSize.width;
-  // //     node.y = Math.random() * svgSize.height;
-  // // });
-
-  //   tables.nodes.forEach((node, i) => {
-  //     if (node.fixed) { // np. flagujemy punkty brzegowe
-  //         node.fx = node.x || svgSize.width / 2;
-  //         node.fy = node.y || svgSize.height / 2;
-  //     } else {
-  //         node.fx = 0; 
-  //         node.fy = 0; 
-  //     }
-  // });
-
-  //   function computeBarycentricPositions(nodes, links, iterations = 50) {
-  //     for (let iter = 0; iter < iterations; iter++) {
-  //         nodes.forEach(node => {
-  //             if (!node.fixed) { // Tylko dla "wolnych" wierzchołków
-  //                 const neighbors = links
-  //                     .filter(link => link.source.id === node.id || link.target.id === node.id)
-  //                     .map(link => link.source.id === node.id ? link.target : link.source);
-
-  //                 // Obliczenie średniej pozycji (barycentrum) sąsiadów
-  //                 let sumX = 0, sumY = 0;
-  //                 neighbors.forEach(neighbor => {
-  //                     sumX += neighbor.x || 0;
-  //                     sumY += neighbor.y || 0;
-  //                 });
-
-  //                 if (neighbors.length > 0) {
-  //                   node.x = sumX / neighbors.length || node.x;
-  //                   node.y = sumY / neighbors.length || node.y;
-  //                   console.log('name: ' + node.id + ', x: ' + node.x + ', y: ' + node.y + '\n')
-  //               } else {
-  //                   node.x = node.x; // Domyślna pozycja
-  //                   node.y = node.y;
-  //                   console.log('name: ' + node.id + ', x: ' + node.x + ', y: ' + node.y + '\n')
-  //               }
-  //             }
-  //         });
-  //     }
-  // }
-
-  // function resolveOverlaps(nodes, spacing = 600) {
-  //   for (let i = 0; i < nodes.length; i++) {
-  //       for (let j = i + 1; j < nodes.length; j++) {
-  //           const nodeA = nodes[i];
-  //           const nodeB = nodes[j];
-  //           const dx = nodeB.x - nodeA.x;
-  //           const dy = nodeB.y - nodeA.y;
-  //           const distance = Math.sqrt(dx * dx + dy * dy);
-
-  //           if (distance < spacing) { // Jeśli odległość mniejsza niż minimalny odstęp
-  //               const offset = (spacing - distance) / 2;
-  //               const angle = Math.atan2(dy, dx);
-                
-  //               nodeA.x -= Math.cos(angle) * offset;
-  //               nodeA.y -= Math.sin(angle) * offset;
-
-  //               nodeB.x += Math.cos(angle) * offset;
-  //               nodeB.y += Math.sin(angle) * offset;
-  //           }
-  //       }
-  //   }
-  // }
-
-    // computeBarycentricPositions(tables.nodes, tables.links);
-    // resolveOverlaps(tables.nodes);
 
     client.end();
     return new Response(JSON.stringify({tables, message: 'Schema generating Successful'}), {
